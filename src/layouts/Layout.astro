@@ -1,0 +1,60 @@
+---
+// Layout.astro — sdílená HTML kostra pro všechny stránky.
+// Místo opakování <html>, <head> a navigace na každé stránce
+// ji definujeme jednou zde. Stránky vkládají svůj obsah přes <slot />.
+import "../styles/global.css";
+
+// Definujeme, jaká data tato komponenta očekává od stránek
+interface Props {
+    title: string; // každá stránka předá svůj název pro <title>
+}
+
+const { title } = Astro.props;
+
+// Astro.url.pathname obsahuje aktuální cestu (např. "/blog" nebo "/galerie").
+// Používáme ji pro zvýraznění aktivního odkazu v navigaci.
+const pathname = Astro.url.pathname;
+
+// Pomocná funkce: vrátí CSS třídy pro odkaz podle toho, zda je aktivní.
+// 'exact' = true znamená, že porovnáváme přesnou shodu (používáme pro "/"),
+// jinak stačí, že URL začíná prefixem (např. "/blog" zachytí i "/blog/clanek").
+function navClass(href: string, exact = false): string {
+    const isActive = exact ? pathname === href : pathname.startsWith(href);
+    return isActive
+        ? "font-bold text-blue-600"
+        : "text-gray-600 hover:text-blue-600 transition";
+}
+---
+
+<!doctype html>
+<html lang="cs">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>{title}</title>
+    </head>
+    <body
+        class="bg-gray-50 text-gray-900 font-sans antialiased min-h-screen flex flex-col"
+    >
+        <header class="bg-white shadow-sm">
+            <nav class="max-w-4xl mx-auto p-4 flex gap-6">
+                <a href="/" class={navClass("/", true)}>Moje Portfolio</a>
+                <a href="/blog" class={navClass("/blog")}>Blog</a>
+                <a href="/galerie" class={navClass("/galerie")}>Galerie</a>
+            </nav>
+        </header>
+
+        <main class="max-w-4xl mx-auto p-4 w-full grow mt-8">
+            <!-- <slot /> je klíčové místo: sem se vloží obsah každé stránky,
+                 která tento layout používá. Funguje jako "díra" v šabloně. -->
+            <slot />
+        </main>
+
+        <footer
+            class="max-w-4xl mx-auto p-4 text-center text-sm text-gray-500 mt-12 mb-4"
+        >
+            <hr class="my-4 border-t" />
+            &copy; 2026 prochst.dev. Vytvořeno pomocí Astro & Tailwind.
+        </footer>
+    </body>
+</html>

@@ -1,0 +1,39 @@
+---
+// Card.astro — karta pro představení jednoho článku.
+// Znovupoužitelná komponenta s typově bezpečnými props.
+interface Props {
+    title: string;
+    excerpt: string;
+    url: string;
+    likes?: number; // otazník = nepovinné, karta funguje i bez lajků
+}
+
+const { title, excerpt, url, likes } = Astro.props;
+---
+
+<a
+    href={url}
+    class="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-300 transition duration-200 cursor-pointer"
+>
+    <h3 class="mb-2 text-xl font-bold tracking-tight text-gray-900">{title}</h3>
+    <p class="font-normal text-gray-600">{excerpt}</p>
+    <div class="flex items-center justify-between mt-4">
+        <span class="text-blue-600 font-medium hover:underline"
+            >Číst více &rarr;</span
+        >
+        {
+            likes !== undefined && (
+                <span class="flex items-center gap-1 text-sm text-gray-400">
+                    <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    {likes}
+                </span>
+            )
+        }
+    </div>
+</a>

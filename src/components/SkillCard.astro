@@ -1,0 +1,44 @@
+---
+// SkillCard.astro — karta zobrazující jednu kategorii dovedností.
+// Data pochází z Content Collection, takže jsou typově ověřená schématem.
+interface Skill {
+    name: string;
+    level: number; // 0–100
+}
+
+interface Props {
+    category: string;
+    items: Skill[];
+}
+
+const { category, items } = Astro.props;
+---
+
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">
+        {category}
+    </h3>
+    <ul class="space-y-3">
+        {
+            items.map((skill) => (
+                <li>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-700 font-medium">
+                            {skill.name}
+                        </span>
+                        <span class="text-gray-400">{skill.level}%</span>
+                    </div>
+                    {/* Progress bar — šířka se nastavuje inline stylem, protože
+                        Tailwind neumí dynamicky generovat třídy jako w-[85%] pro
+                        hodnoty, které nezná při buildu. */}
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div
+                            class="bg-blue-500 h-2 rounded-full transition-all"
+                            style={`width: ${skill.level}%`}
+                        />
+                    </div>
+                </li>
+            ))
+        }
+    </ul>
+</div>

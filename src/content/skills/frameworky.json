@@ -1,0 +1,21 @@
+{
+    "category": "Frameworky",
+    "items": [
+        {
+            "name": "Nette & Latte",
+            "level": 75
+        },
+        {
+            "name": ".NET / .NET Core",
+            "level": 70
+        },
+        {
+            "name": "VueJS",
+            "level": 40
+        },
+        {
+            "name": "NodeJS",
+            "level": 30
+        }
+    ]
+}

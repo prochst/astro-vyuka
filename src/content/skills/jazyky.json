@@ -1,0 +1,21 @@
+{
+    "category": "Jazyky",
+    "items": [
+        {
+            "name": "PHP",
+            "level": 85
+        },
+        {
+            "name": "C#",
+            "level": 80
+        },
+        {
+            "name": "HTML & CSS",
+            "level": 60
+        },
+        {
+            "name": "TypeScript",
+            "level": 40
+        }
+    ]
+}

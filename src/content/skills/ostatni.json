@@ -1,0 +1,25 @@
+{
+    "category": "Ostatní",
+    "items": [
+        {
+            "name": "SQL",
+            "level": 90
+        },
+        {
+            "name": "IIS Administration",
+            "level": 80
+        },
+        {
+            "name": "Windows Server",
+            "level": 75
+        },
+        {
+            "name": "Linux",
+            "level": 50
+        },
+        {
+            "name": "Docker",
+            "level": 30
+        }
+    ]
+}

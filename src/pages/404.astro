@@ -1,0 +1,24 @@
+---
+// 404.astro — stránka pro neexistující URL.
+// Astro tento soubor automaticky použije kdykoliv URL nevede na žádnou stránku.
+// Název souboru musí být přesně "404.astro" — žádná jiná konfigurace není potřeba.
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Stránka nenalezena | Moje Portfolio">
+    <div class="text-center py-24">
+        <p class="text-8xl font-extrabold text-blue-100 select-none">404</p>
+        <h1 class="text-3xl font-bold text-gray-800 mt-4 mb-3">
+            Stránka nenalezena
+        </h1>
+        <p class="text-gray-500 mb-8">
+            Stránka, kterou hledáš, neexistuje nebo byla přesunuta.
+        </p>
+        <a
+            href="/"
+            class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+        >
+            &larr; Zpět na hlavní stránku
+        </a>
+    </div>
+</Layout>

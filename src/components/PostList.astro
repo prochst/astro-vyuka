@@ -1,0 +1,26 @@
+---
+// PostList.astro — sdílená komponenta pro seznam článků.
+// Používá se na hlavní stránce i na stránce blogu — DRY princip.
+// Přijímá pole článků a zobrazí je v responzivní mřížce karet.
+import Card from "./Card.astro";
+import type { Post } from "../db/schema";
+
+interface Props {
+    posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {
+        posts.map((post) => (
+            <Card
+                title={post.title}
+                excerpt={post.excerpt}
+                url={`/blog/${post.slug}`}
+                likes={post.likes}
+            />
+        ))
+    }
+</div>

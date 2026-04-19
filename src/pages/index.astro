@@ -1,0 +1,73 @@
+---
+// index.astro — hlavní stránka portfolia (URL: /)
+// Tato stránka je statická — vygeneruje se jednou při buildu jako HTML soubor.
+// Frontmatter (kód mezi ---) běží pouze na serveru/při buildu, nikdy v prohlížeči.
+import Layout from "../layouts/Layout.astro";
+import { getAllPosts } from "../db/schema";
+import PostList from "../components/PostList.astro";
+import SkillCard from "../components/SkillCard.astro";
+
+// getCollection() načte všechny soubory z src/content/skills/ a validuje je schématem.
+// Pokud by soubor neodpovídal schématu (z content.config.ts), build selže s chybou.
+import { getCollection, type CollectionEntry } from "astro:content";
+type SkillEntry = CollectionEntry<"skills">;
+const skillsEntries = await getCollection("skills");
+
+// Seřadíme kategorie v požadovaném pořadí podle názvu souboru (id = název bez přípony)
+const order = ["jazyky", "frameworky", "ostatni"];
+const skills = skillsEntries.sort(
+	(a: SkillEntry, b: SkillEntry) => order.indexOf(a.id) - order.indexOf(b.id),
+);
+
+// Volání databáze proběhne jednou při buildu — výsledné HTML již obsahuje data.
+const posts = getAllPosts();
+---
+
+<Layout title="Domů | Moje Portfolio">
+	<section class="text-center py-12">
+		<h1 class="text-4xl font-extrabold tracking-tight mb-4 text-gray-900">
+			Ahoj, jsem <span class="text-blue-600"
+				>vývojář, který pracuje s láskou</span
+			>
+		</h1>
+		<p class="text-lg text-gray-600 max-w-2xl mx-auto">
+			První programy jsem psal na děrné štítky a od té doby mě psaní kódu
+			stále fascinuje. Posledních 15 let jsem strávil v manažerské IT
+			pozici a k vývoji jsem se dostal jen málo. Nyní jsme se k této
+			kreativní činnosti vrátil. Věnuji se hlavně serverové části webových
+			aplikací ale baví mě i Front end.
+		</p>
+		<p class="text-lg text-gray-600 max-w-2xl mx-auto">
+			Zaměřuji se hlavně na webové aplikace postavené na PHP a Nette
+			frameworku. Pro menší projekty používám VueJS v kombinaci s REST API
+			zdrojem dat. Rád pracuji i s C# pro vývoj konzolových nebo
+			desktopových aplikací. Zajímavý mi připadá i projekt Blazor. Mám
+			dlouholeté zkušenosti s SQL databázemi, jejich návrhem správou a
+			optimalizací.
+		</p>
+	</section>
+
+	<section class="mt-8">
+		<h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
+			Moje dovednosti
+		</h2>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+			{
+				skills.map((entry: SkillEntry) => (
+					<SkillCard
+						category={entry.data.category}
+						items={entry.data.items}
+					/>
+				))
+			}
+		</div>
+	</section>
+
+	<section class="mt-8">
+		<h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
+			Nejnovější články
+		</h2>
+
+		<PostList posts={posts} />
+	</section>
+</Layout>

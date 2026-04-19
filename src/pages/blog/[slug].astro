@@ -1,0 +1,56 @@
+---
+// blog/[slug].astro — detail článku (URL: /blog/cokoliv)
+//
+// Hranaté závorky v názvu souboru = dynamický parametr URL.
+// Tato stránka zpracovává libovolnou URL ve tvaru /blog/[cokoliv].
+//
+// export const prerender = false — jen tato stránka běží na serveru.
+// Důvod: zobrazujeme aktuální počet lajků, který se mění za běhu.
+// Všechny ostatní stránky zůstávají statické.
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import db from "../../db/database";
+import type { Post } from "../../db/schema";
+import LikeButton from "../../components/LikeButton";
+
+// Z URL /blog/muj-clanek dostaneme slug = "muj-clanek"
+const { slug } = Astro.params;
+
+// Hledáme článek v databázi podle slugu.
+// Parametr '?' chrání před SQL injection — hodnota se escapuje automaticky.
+const stmt = db.prepare("SELECT * FROM posts WHERE slug = ?");
+const post = stmt.get(slug) as Post | undefined;
+
+// Pokud článek neexistuje, vrátíme HTTP 404 místo pádu aplikace.
+// Astro umožňuje vrátit Response přímo z frontmatteru.
+if (!post) {
+    return new Response(null, { status: 404 });
+}
+---
+
+<Layout title={`${post.title} | Blog`}>
+    <article class="max-w-2xl mx-auto py-8">
+        <a href="/blog" class="text-blue-600 hover:underline mb-4 inline-block"
+            >&larr; Zpět na blog</a
+        >
+
+        <h1 class="text-4xl font-extrabold mb-4 text-gray-900">{post.title}</h1>
+
+        <div class="text-sm text-gray-500 mb-8 border-b pb-4">
+            Publikováno: {new Date(post.created_at).toLocaleDateString("cs-CZ")}
+            <!-- client:visible = React komponentu načti až když je viditelná v prohlížeči.
+             To šetří výkon — JavaScript se nenačítá zbytečně hned při otevření stránky.
+             initialLikes a slug se předají jako props ze serveru do Reactu. -->
+            <LikeButton
+                client:visible
+                initialLikes={post.likes}
+                slug={post.slug}
+            />
+        </div>
+
+        <div class="text-gray-800 leading-relaxed text-lg">
+            {post.content}
+        </div>
+    </article>
+</Layout>

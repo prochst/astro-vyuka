@@ -1,0 +1,27 @@
+---
+// blog.astro — seznam všech článků s SERVEROVÝM vyhledáváním (URL: /blog)
+//
+// Vyhledávání je serverové: uživatel píše → React volá Astro Action →
+// server prohledá databázi SQL dotazem → vrátí výsledky.
+// Výhoda: prohledává celý obsah článků, ne jen co je vidět v HTML.
+//
+// Stránka musí být serverová (prerender = false), protože Actions vyžadují server.
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+import BlogSearch from "../components/BlogSearch";
+import { getAllPosts } from "../db/schema";
+
+// Výchozí seznam článků — předáme jako prop do React komponenty
+const posts = getAllPosts();
+---
+
+<Layout title="Blog | Moje Portfolio">
+    <h1 class="text-3xl font-bold mb-2">Všechny články</h1>
+    <p class="text-gray-500 text-sm mb-6">
+        Vyhledávání je <strong>serverové</strong> — dotaz se provede v databázi na
+        serveru.
+    </p>
+    <!-- client:load — komponentu načti okamžitě, potřebujeme interaktivitu hned -->
+    <BlogSearch client:load initialPosts={posts} />
+</Layout>
