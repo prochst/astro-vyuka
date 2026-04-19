@@ -1,9 +1,13 @@
-// BlogSearch.tsx — React komponenta pro serverové vyhledávání článků.
+// BlogSearch.tsx — React komponenta pro serverové vyhledávání článků se stránkováním.
 //
 // SERVEROVÉ vyhledávání: uživatel zadá dotaz → React zavolá Astro Action →
 // server provede SQL dotaz v databázi → vrátí výsledky → React překreslí seznam.
 //
-// Výhody oproti statickému filtrování:
+// STRÁNKOVÁNÍ: funguje přes URL parametry (?page=N), takže každá stránka má
+// vlastní URL a lze ji sdílet nebo přidat do záložek.
+// Při aktivním vyhledávání se stránkování skryje — zobrazují se všechny výsledky.
+//
+// Výhody serverového vyhledávání oproti statickému filtrování:
 //   - prohledává i content (celý text článku), nejen co je v HTML
 //   - pro velké databáze nenačítá vše do prohlížeče
 //   - logika zůstává na serveru
@@ -17,12 +21,19 @@ interface Props {
     // Výchozí seznam článků předaný ze serveru při prvním vykreslení stránky.
     // Při prázdném vyhledávání se zobrazí tento seznam.
     initialPosts: Post[];
+    // Stránkovací informace ze serveru
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
 }
 
-export default function BlogSearch({ initialPosts }: Props) {
+export default function BlogSearch({ initialPosts, currentPage, totalPages, totalCount }: Props) {
     const [posts, setPosts] = useState<Post[]>(initialPosts);
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Příznak: je aktivní vyhledávání? Pokud ano, stránkování se skryje.
+    const isSearching = query.trim().length > 0;
 
     const handleSearch = async (value: string) => {
         setQuery(value);
@@ -64,20 +75,24 @@ export default function BlogSearch({ initialPosts }: Props) {
                 <p className="text-gray-400 text-sm mb-4">Hledám na serveru...</p>
             )}
 
-            {/* Výsledky */}
+            {/* Prázdné výsledky při vyhledávání */}
             {!loading && posts.length === 0 && query && (
                 <p className="text-gray-500">Žádné články neodpovídají hledanému výrazu.</p>
             )}
 
+            {/* Mřížka článků */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {posts.map((post) => (
                     <a
                         key={post.id}
-                        href={`/blog/${post.slug}`}
+                        href={`/blog/${post.slug}?from=${currentPage}`}
                         className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-300 transition duration-200"
                     >
                         <h3 className="mb-2 text-xl font-bold tracking-tight text-gray-900">{post.title}</h3>
                         <p className="font-normal text-gray-600">{post.excerpt}</p>
+                        <p className="text-xs text-gray-400 mt-2">
+                            {new Date(post.created_at).toLocaleDateString('cs-CZ')}
+                        </p>
                         <div className="flex items-center justify-between mt-4">
                             <span className="text-blue-600 font-medium">Číst více →</span>
                             <span className="flex items-center gap-1 text-sm text-gray-400">
@@ -90,6 +105,56 @@ export default function BlogSearch({ initialPosts }: Props) {
                     </a>
                 ))}
             </div>
+
+            {/*
+                Stránkovací navigace — zobrazí se pouze tehdy, když uživatel NEhledá.
+                Navigace je realizována jako <a> odkazy (ne onClick), takže každá stránka
+                má vlastní URL (/blog?page=2) a lze ji sdílet, přejít zpět atd.
+            */}
+            {!isSearching && totalPages > 1 && (
+                <nav className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+                    {/* Tlačítko "Předchozí" — neaktivní na první stránce */}
+                    {currentPage > 1 ? (
+                        <a
+                            href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-blue-300 transition"
+                        >
+                            ← Předchozí
+                        </a>
+                    ) : (
+                        <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+                            ← Předchozí
+                        </span>
+                    )}
+
+                    {/* Indikátor aktuální stránky a celkového počtu */}
+                    <span className="text-sm text-gray-500">
+                        Stránka {currentPage} z {totalPages}
+                        <span className="hidden sm:inline"> ({totalCount} článků celkem)</span>
+                    </span>
+
+                    {/* Tlačítko "Další" — neaktivní na poslední stránce */}
+                    {currentPage < totalPages ? (
+                        <a
+                            href={`/blog?page=${currentPage + 1}`}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-blue-300 transition"
+                        >
+                            Další →
+                        </a>
+                    ) : (
+                        <span className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+                            Další →
+                        </span>
+                    )}
+                </nav>
+            )}
+
+            {/* Při vyhledávání zobrazíme info, že stránkování není aktivní */}
+            {isSearching && (
+                <p className="mt-6 text-xs text-gray-400 text-center">
+                    Při vyhledávání se zobrazují všechny odpovídající články (stránkování je vypnuto).
+                </p>
+            )}
         </div>
     );
 }

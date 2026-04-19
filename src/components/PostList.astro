@@ -20,6 +20,7 @@ const { posts } = Astro.props;
                 excerpt={post.excerpt}
                 url={`/blog/${post.slug}`}
                 likes={post.likes}
+                date={post.created_at}
             />
         ))
     }

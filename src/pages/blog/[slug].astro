@@ -17,6 +17,12 @@ import LikeButton from "../../components/LikeButton";
 // Z URL /blog/muj-clanek dostaneme slug = "muj-clanek"
 const { slug } = Astro.params;
 
+// Parametr ?from=N říká, ze které stránky blogu uživatel přišel.
+// Použijeme ho pro sestavení odkazu "Zpět na blog".
+const fromPage = Astro.url.searchParams.get("from");
+const backHref =
+    fromPage && fromPage !== "1" ? `/blog?page=${fromPage}` : "/blog";
+
 // Hledáme článek v databázi podle slugu.
 // Parametr '?' chrání před SQL injection — hodnota se escapuje automaticky.
 const stmt = db.prepare("SELECT * FROM posts WHERE slug = ?");
@@ -31,7 +37,9 @@ if (!post) {
 
 <Layout title={`${post.title} | Blog`}>
     <article class="max-w-2xl mx-auto py-8">
-        <a href="/blog" class="text-blue-600 hover:underline mb-4 inline-block"
+        <a
+            href={backHref}
+            class="text-blue-600 hover:underline mb-4 inline-block"
             >&larr; Zpět na blog</a
         >
 

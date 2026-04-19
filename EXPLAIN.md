@@ -377,6 +377,102 @@ export function getAllPosts() {
 
 ---
 
+### 15. Stránkování (Pagination)
+
+Stránkování rozděluje velký seznam položek do více stránek, aby stránka nenačítala
+zbytečně velké množství dat.
+
+#### Princip: URL query parametry
+
+Protože blog je serverově renderovaný (`prerender = false`), stránkování funguje
+přes **URL query parametry**: `/blog?page=2`, `/blog?page=3`. Každá stránka má svou
+vlastní URL — lze ji sdílet, uložit do záložek, a funguje i přepnutí zpět v prohlížeči.
+
+```
+/blog        → stránka 1 (výchozí)
+/blog?page=2 → stránka 2
+/blog?page=3 → stránka 3
+```
+
+Na rozdíl od Astro `paginate()` helperu (který funguje jen pro statické stránky), tento
+přístup funguje na serveru a přirozeně se kombinuje s vyhledáváním.
+
+#### Výpočet LIMIT / OFFSET v SQL
+
+SQL vrací jen záznamy pro aktuální stránku pomocí `LIMIT` a `OFFSET`:
+
+```ts
+// schema.ts
+const PER_PAGE = 4;
+
+// stránka 1: LIMIT 4 OFFSET 0  → záznamy 1–4
+// stránka 2: LIMIT 4 OFFSET 4  → záznamy 5–8
+// stránka 3: LIMIT 4 OFFSET 8  → záznamy 9–12
+const getPaginatedPostsStmt = db.prepare(
+    'SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?'
+);
+
+export function getPaginatedPosts(page: number, perPage: number): Post[] {
+    const offset = (page - 1) * perPage;
+    return getPaginatedPostsStmt.all(perPage, offset) as Post[];
+}
+```
+
+#### Čtení čísla stránky v Astru
+
+`Astro.url.searchParams` je standardní Web API — dostupné na serverově renderovaných
+stránkách v runtime:
+
+```ts
+// blog.astro
+const pageParam = Astro.url.searchParams.get('page');
+const currentPage = Math.max(1, parseInt(pageParam ?? '1') || 1);
+const totalCount = getPostsCount();
+const totalPages = Math.ceil(totalCount / PER_PAGE);
+const posts = getPaginatedPosts(currentPage, PER_PAGE);
+```
+
+#### Navigační tlačítka v React komponentě
+
+Stránkovací navigace používá `<a>` tagy (ne `onClick`), protože stránkování mění URL
+a tím způsobuje nové načtení stránky se serverem:
+
+```tsx
+// BlogSearch.tsx
+<a href={`/blog?page=${currentPage + 1}`}>Další →</a>
+<a href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}>← Předchozí</a>
+```
+
+Poznámka: `/blog?page=1` by také fungovalo, ale pro čistotu používáme `/blog` (bez parametru).
+
+#### Koexistence vyhledávání a stránkování
+
+Při aktivním vyhledávání vrátí server **všechny** odpovídající výsledky (bez stránkování),
+protože `searchPosts` Action provede SQL dotaz bez `LIMIT`. React komponenta pak skryje
+stránkovací navigaci pomocí příznaku `isSearching`:
+
+```tsx
+const isSearching = query.trim().length > 0;
+{!isSearching && totalPages > 1 && <nav>...</nav>}
+```
+
+#### Nejnovější články na úvodní stránce
+
+Úvodní stránka zobrazuje jen 2 nejnovější články pomocí `getRecentPosts(2)` — SQLite
+funkce s `LIMIT`. Pod výpisem je tlačítko "Zobrazit další" odkazující na `/blog`.
+
+```ts
+// schema.ts
+const getRecentPostsStmt = db.prepare(
+    'SELECT * FROM posts ORDER BY created_at DESC LIMIT ?'
+);
+export function getRecentPosts(limit: number): Post[] {
+    return getRecentPostsStmt.all(limit) as Post[];
+}
+```
+
+---
+
 ## Tok dat při načtení stránky `/blog/muj-clanek`
 
 ```

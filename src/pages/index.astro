@@ -3,7 +3,7 @@
 // Tato stránka je statická — vygeneruje se jednou při buildu jako HTML soubor.
 // Frontmatter (kód mezi ---) běží pouze na serveru/při buildu, nikdy v prohlížeči.
 import Layout from "../layouts/Layout.astro";
-import { getAllPosts } from "../db/schema";
+import { getRecentPosts } from "../db/schema";
 import PostList from "../components/PostList.astro";
 import SkillCard from "../components/SkillCard.astro";
 
@@ -20,7 +20,8 @@ const skills = skillsEntries.sort(
 );
 
 // Volání databáze proběhne jednou při buildu — výsledné HTML již obsahuje data.
-const posts = getAllPosts();
+// Načteme pouze 2 nejnovější články — na úvodní stránce chceme jen ukázku.
+const posts = getRecentPosts(2);
 ---
 
 <Layout title="Domů | Moje Portfolio">
@@ -69,5 +70,31 @@ const posts = getAllPosts();
 		</h2>
 
 		<PostList posts={posts} />
-	</section>
-</Layout>
+
+		<!--
+                    Tlačítko "Zobrazit další" odkazuje na /blog — stránku se všemi
+                    články a vyhledáváním. Jde o klasický <a> odkaz, ne interaktivní
+                    komponenta — na statické stránce není potřeba React/JS.
+                -->
+		<div class="mt-6 text-center">
+			<a
+				href="/blog"
+				class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+			>
+				Zobrazit další
+				<svg
+					class="w-4 h-4"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+				</svg>
+			</a>
+		</div>
+	</section></Layout
+>

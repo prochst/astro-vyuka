@@ -1,27 +1,55 @@
 ---
-// blog.astro — seznam všech článků s SERVEROVÝM vyhledáváním (URL: /blog)
+// blog.astro — seznam článků se STRÁNKOVÁNÍM a SERVEROVÝM vyhledáváním (URL: /blog)
+//
+// Stránkování funguje přes URL query parametr ?page=N:
+//   /blog        → stránka 1
+//   /blog?page=2 → stránka 2
+//   /blog?page=3 → stránka 3
 //
 // Vyhledávání je serverové: uživatel píše → React volá Astro Action →
-// server prohledá databázi SQL dotazem → vrátí výsledky.
+// server prohledá databázi SQL dotazem → vrátí výsledky (bez stránkování).
 // Výhoda: prohledává celý obsah článků, ne jen co je vidět v HTML.
 //
-// Stránka musí být serverová (prerender = false), protože Actions vyžadují server.
+// Stránka musí být serverová (prerender = false), protože:
+// 1. Actions vyžadují server
+// 2. Query parametry jsou dostupné až v runtime, ne při buildu
 export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
 import BlogSearch from "../components/BlogSearch";
-import { getAllPosts } from "../db/schema";
+import { getPaginatedPosts, getPostsCount } from "../db/schema";
 
-// Výchozí seznam článků — předáme jako prop do React komponenty
-const posts = getAllPosts();
+// Počet článků zobrazených na jedné stránce
+const PER_PAGE = 4;
+
+// Přečteme číslo stránky z URL parametru ?page=N
+// Astro.url.searchParams je standardní Web API — funguje stejně jako v prohlížeči
+const pageParam = Astro.url.searchParams.get("page");
+const currentPage = Math.max(1, parseInt(pageParam ?? "1") || 1);
+
+// Celkový počet článků a výpočet počtu stránek
+const totalCount = getPostsCount();
+const totalPages = Math.ceil(totalCount / PER_PAGE);
+
+// Načteme pouze záznamy pro aktuální stránku (SQL: LIMIT + OFFSET)
+const posts = getPaginatedPosts(currentPage, PER_PAGE);
 ---
 
 <Layout title="Blog | Moje Portfolio">
     <h1 class="text-3xl font-bold mb-2">Všechny články</h1>
     <p class="text-gray-500 text-sm mb-6">
         Vyhledávání je <strong>serverové</strong> — dotaz se provede v databázi na
-        serveru.
+        serveru. Při vyhledávání se stránkování deaktivuje.
     </p>
-    <!-- client:load — komponentu načti okamžitě, potřebujeme interaktivitu hned -->
-    <BlogSearch client:load initialPosts={posts} />
+    <!--
+        Předáme stránkovací informace do React komponenty jako props.
+        client:load — načti okamžitě, potřebujeme interaktivitu ihned (vyhledávání).
+    -->
+    <BlogSearch
+        client:load
+        initialPosts={posts}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+    />
 </Layout>

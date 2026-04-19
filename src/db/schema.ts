@@ -28,10 +28,37 @@ export interface Photo {
 const getAllPostsStmt = db.prepare('SELECT * FROM posts ORDER BY created_at DESC');
 const getAllPhotosStmt = db.prepare('SELECT * FROM photos ORDER BY created_at DESC');
 
+// Pro stránkování: LIMIT omezí počet výsledků, OFFSET přeskočí záznamy předchozích stránek.
+// Např. stránka 2 s perPage=4: LIMIT 4 OFFSET 4 → záznamy 5–8.
+const getPaginatedPostsStmt = db.prepare(
+    'SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?'
+);
+// Celkový počet článků potřebujeme pro výpočet počtu stránek.
+const getPostsCountStmt = db.prepare('SELECT COUNT(*) as count FROM posts');
+
+// Posledních N článků — pro úvodní stránku (výpis nejnovějších bez načítání všech).
+const getRecentPostsStmt = db.prepare(
+    'SELECT * FROM posts ORDER BY created_at DESC LIMIT ?'
+);
+
 export function getAllPosts(): Post[] {
     return getAllPostsStmt.all() as Post[];
 }
 
 export function getAllPhotos(): Photo[] {
     return getAllPhotosStmt.all() as Photo[];
+}
+
+export function getPaginatedPosts(page: number, perPage: number): Post[] {
+    const offset = (page - 1) * perPage;
+    return getPaginatedPostsStmt.all(perPage, offset) as Post[];
+}
+
+export function getPostsCount(): number {
+    const row = getPostsCountStmt.get() as { count: number };
+    return row.count;
+}
+
+export function getRecentPosts(limit: number): Post[] {
+    return getRecentPostsStmt.all(limit) as Post[];
 }

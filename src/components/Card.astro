@@ -6,9 +6,10 @@ interface Props {
     excerpt: string;
     url: string;
     likes?: number; // otazník = nepovinné, karta funguje i bez lajků
+    date?: string; // datum publikování (ISO string z databáze)
 }
 
-const { title, excerpt, url, likes } = Astro.props;
+const { title, excerpt, url, likes, date } = Astro.props;
 ---
 
 <a
@@ -17,6 +18,13 @@ const { title, excerpt, url, likes } = Astro.props;
 >
     <h3 class="mb-2 text-xl font-bold tracking-tight text-gray-900">{title}</h3>
     <p class="font-normal text-gray-600">{excerpt}</p>
+    {
+        date && (
+            <p class="text-xs text-gray-400 mt-2">
+                {new Date(date).toLocaleDateString("cs-CZ")}
+            </p>
+        )
+    }
     <div class="flex items-center justify-between mt-4">
         <span class="text-blue-600 font-medium hover:underline"
             >Číst více &rarr;</span
